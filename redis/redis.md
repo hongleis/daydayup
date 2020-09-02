@@ -43,3 +43,20 @@
       1. 从库优先级-配置`slave-priority`
       2. 从库复制进度-`slave-repl-offset`最接近`master-repl-offset`
       3. 从库ID号-小的得分高
+
+## 哨兵挂了，还能主从切换吗
+- 配置哨兵 `sentinel monitor <master-name> <ip> <redis-port> <quorum>`
+- 哨兵之间相互发现，通过Redis提供的`sub/pub`机制
+1. 哨兵和主库建立连接，在主库发布消息(比如自己ip和端口)
+2. 哨兵也可以订阅别的哨兵的信息，这样就可以和别的哨兵建立连接
+3. 哨兵统一订阅`__sentinel__:hello`频道
+- 哨兵还需要和从库建立连接
+1. 哨兵向主库发送INFO命令
+2. 主库把从库列表信息发送过去
+3. 哨兵和从库建立连接
+
+- 哨兵需要通知客户端
+1. 哨兵本身就是一个redis，可以被订阅
+2. 哨兵把主库选出来后，客户端会收到事件`swith-master <master name> <oldip> <oldport> <newip> <newport>`
+   
+- 由哪个哨兵执行主从切换
